@@ -284,27 +284,53 @@ class SerialReceiver(GenericReceiverClass):
             await asyncio.sleep(0.1)  # Avoid blocking loop
         print(f"Disconnected to sensor {sensor} on port {port}")
 
+    # async def receiveData(self, sensorId):
+    #     print(f"Receiving data from sensor {sensorId}")
+    #     buffer = self.buffers[sensorId]
+    #     partialData = b''
+    #     while not self.stopFlag.is_set():
+    #         try:
+    #             data = await buffer.get()
+    #             # print("DATA: ", data)
+    #             partialData += data
+
+    #             while True:
+    #                 index = partialData.find(self.delimiter)
+    #                 if index == -1:
+    #                     break
+    #                 packet = partialData[:index]
+    #                 await self.process_line(packet)
+    #                 partialData = partialData[index + len(self.delimiter):]
+
+    #         except Exception as e:
+    #             print(f"[❌ receiveData error for sensor {sensorId}] {e}")
+    #             break
+    #     print(f"Stopping data reception for sensor {sensorId}")
+
     async def receiveData(self, sensorId):
         print(f"Receiving data from sensor {sensorId}")
         buffer = self.buffers[sensorId]
         partialData = b''
+        
         while not self.stopFlag.is_set():
             try:
                 data = await buffer.get()
+                if not data: continue
+                
                 partialData += data
 
-                while True:
-                    index = partialData.find(self.delimiter)
-                    if index == -1:
-                        break
-                    packet = partialData[:index]
-                    await self.process_line(packet)
-                    partialData = partialData[index + len(self.delimiter):]
-
+                # Look for the 'wr' marker in the stream
+                while b'wr' in partialData:
+                    # Split the data at the first 'wr' found
+                    packet, partialData = partialData.split(b'wr', 1)
+                    
+                    if len(packet) > 0:
+                        # Only process if the packet is the correct size
+                        # (Adjust this number based on your expected packet size)
+                        await self.process_line(packet) 
+                        
             except Exception as e:
-                print(f"[❌ receiveData error for sensor {sensorId}] {e}")
-                break
-        print(f"Stopping data reception for sensor {sensorId}")
+                print(f"Error in receiver: {e}")
         
 
     def startReceiverThreads(self):
@@ -453,7 +479,7 @@ class MultiProtocolReceiver():
 
         # Convert the merged data to a JSON string with proper quoting
         json_string = json.dumps(merged_data)
-        print(json_string)
+        print("json string", json_string)
 
         if platform.system() =="Darwin":
             ser2 = serial.Serial(baudrate=data['serialOptions']['baudrate'], timeout=1)
@@ -463,8 +489,8 @@ class MultiProtocolReceiver():
             else:
                 ser2.port=data['serialOptions']['port']
 
-            print(ser2.port)
-            print(ser2.baudrate)
+            print("port", ser2.port)
+            print("baudrate", ser2.baudrate)
             ser2.open()
         else:
             # Send the JSON string over the serial port
@@ -486,8 +512,8 @@ class MultiProtocolReceiver():
             else:
                 ser2.port=data['serialOptions']['port']
 
-            print(ser2.port)
-            print(ser2.baudrate)
+            print("port", ser2.port)
+            print("baudrate", ser2.baudrate)
             ser2.dtr = False  
             ser2.rts = False
             ser2.open()
@@ -733,6 +759,7 @@ class MultiProtocolReceiver():
 
     # Sends all sensors (with real time pressure updates) as input to the custom method
     def runCustomMethod(self, method, record=False, viz=False):
+        print("Running custom method")
         self.initializeReceivers(record)
         threads=[]
         captureThread = threading.Thread(target=self.startReceiverThread)

@@ -44,7 +44,7 @@ class Sensor():
 
 
     def append_data(self, ts,reading, packet):
-        # print(ts)
+        # print("timestamp", ts)
         f = self.file
         block_size = self.block_size
         fc = self.fc

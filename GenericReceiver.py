@@ -32,6 +32,7 @@ class GenericReceiverClass():
         # as it still uses shared state like `self.sensors`.
         if len(line) == 1 + (1 + self.numNodes) * 2 + 4:
             sendId, startIdx, readings, packetID = self.unpackBytesPacket(line)
+            # print("GOT DATA FROM SENSOR", sendId)
             sensor = self.sensors[sendId]
             await sensor.processRowAsync(startIdx, readings, packetID)
 
