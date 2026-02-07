@@ -757,25 +757,59 @@ class MultiProtocolReceiver():
         vizThread.start()
         self.activeThreads.append(vizThread)
 
-    # Sends all sensors (with real time pressure updates) as input to the custom method
+    # # Sends all sensors (with real time pressure updates) as input to the custom method
+    # def runCustomMethod(self, method, record=False, viz=False):
+    #     print("Running custom method")
+    #     self.initializeReceivers(record)
+    #     threads=[]
+    #     captureThread = threading.Thread(target=self.startReceiverThread)
+    #     captureThread.start()
+    #     threads.append(captureThread)
+    #     customThread = threading.Thread(target=method, args=(self.allSensors,))
+    #     customThread.start()
+    #     threads.append(customThread)
+    #     if viz:
+    #         vizThread = threading.Thread(target=update_sensors, args=(self.allSensors,))
+    #         vizThread.start()
+    #         threads.append(vizThread)
+    #         utils.start_nextjs()
+    #         url = "http://localhost:3000"
+    #         webbrowser.open_new_tab(url)
+    #         start_server()
+    #     for thread in threads:
+    #         thread.join()
+
     def runCustomMethod(self, method, record=False, viz=False):
         print("Running custom method")
         self.initializeReceivers(record)
-        threads=[]
+        threads = []
+
+        # 1. The Data Capture Thread (Handles ESP32 -> Laptop)
         captureThread = threading.Thread(target=self.startReceiverThread)
         captureThread.start()
         threads.append(captureThread)
-        customThread = threading.Thread(target=method, args=(self.allSensors,))
+
+        # 2. The Custom Method Thread (Handles Laptop -> Quest WebSocket)
+        # Since 'method' is now async, we use a wrapper to start the asyncio loop
+        def async_wrapper(m, sensors):
+            asyncio.run(m(sensors))
+
+        customThread = threading.Thread(target=async_wrapper, args=(method, self.allSensors))
         customThread.start()
         threads.append(customThread)
+
+        # 3. The Visualization Thread (NextJS / Flask)
         if viz:
+            # Note: If update_sensors is also async, use the async_wrapper here too
             vizThread = threading.Thread(target=update_sensors, args=(self.allSensors,))
             vizThread.start()
             threads.append(vizThread)
+            
             utils.start_nextjs()
             url = "http://localhost:3000"
             webbrowser.open_new_tab(url)
             start_server()
+
         for thread in threads:
             thread.join()
         
