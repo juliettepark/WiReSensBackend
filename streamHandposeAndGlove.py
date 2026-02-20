@@ -5,6 +5,10 @@ import json
 import csv
 from datetime import datetime
 
+# Constants
+
+NUM_SENSORS = 16*16
+
 right_hand_regions = {
     't2':(slice(13,16), slice(12,16)),
     't1':(slice(11,13), slice(12,16)),
@@ -48,13 +52,14 @@ bone_names = [
 
 # This variable will hold our single connection
 active_quest = None
-latest_sensor_value = 0
+latest_sensor_values = []
+latest_index_avg = 0
 recording_buffer = []
 is_recording = False
 
 async def quest_handler(websocket):
     """Handles incoming Hand Pose data from Unity."""
-    global latest_sensor_value, recording_buffer, is_recording
+    global latest_sensor_values, recording_buffer, is_recording
     print(f"[🌐] Quest connected!")
     
     async for message in websocket:
@@ -74,34 +79,37 @@ async def quest_handler(websocket):
                 print(f"✅ RECORDING SAVED TO {filename}")
 
             elif msg_type == "HAND_POSE" and is_recording:
-                # MERGE HAPPENS HERE: 
-                # We take the Unity Bone data and attach the latest sensor average
+                # MASTER ROW CONSTRUCTION
                 row = [
-                    datetime.now().timestamp(), # PC Timestamp
+                    datetime.now().timestamp(), # Computer Timestamp
                     payload.get("ts"),          # Unity relative timestamp
-                    latest_sensor_value         # The value from your numpy processing
+                    latest_index_avg,           # Latest index finger pressure value (for debugging)
                 ]
+                
+                # 1. Add full 16x16 grid of sensor values from the glove
+                # If sensor data hasn't arrived yet, fill with zeros
+                if len(latest_sensor_values) > 0:
+                    row.extend(latest_sensor_values)
+                else:
+                    # Just write zeros for all the sensors
+                    row.extend([0] * NUM_SENSORS) 
 
-                # The 334 float values (bones)
-                # 2 hands x 26 bones x 7 data points
+                # 2. Add all 334 bone values (2 hands x 26 bones x 7 data points)
                 row.extend(payload.get("data"))
+                
                 recording_buffer.append(row)
 
         except Exception as e:
             print(f"Error: {e}")
 
-def save_to_csv(filename):
-    # Setup headers: Time, Sensor, then all Bone floats
-    headers = get_descriptive_headers()
-    
-    with open(filename, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        writer.writerows(recording_buffer)
-
 def get_descriptive_headers():
-    """Generates headers matching the Unity HandPoseLogger format."""
-    headers = ["pc_ts", "unity_ts", "sensor_avg"]
+    """Generates headers matching both the sensor array and bone data."""
+    headers = ["pc_ts", "unity_ts", "index_avg"]
+    
+    # Create headers for the full sensor array
+    # Format is s_0, s_1, ...
+    for i in range(NUM_SENSORS):
+        headers.append(f"s_{i}")
     
     # Create L_BoneName_Px, etc. for both hands
     for prefix in ["L", "R"]:
@@ -115,30 +123,44 @@ def get_descriptive_headers():
             headers.append(f"{prefix}_{bone}_Qw")
     return headers
 
+def save_to_csv(filename):
+    # Determine how many sensor columns we have based on the first row of data
+    if not recording_buffer:
+        return
+    
+    headers = get_descriptive_headers()
+    
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        writer.writerows(recording_buffer)
+
+def get_index_average(sensors):
+    index_finger_region = (slice(9,11), slice(0,3))
+    grid = sensors[0].pressure.reshape(sensors[0].selWires, sensors[0].readWires)
+    return int(np.mean(grid[index_finger_region[1], index_finger_region[0]]))
 
 async def sync_quest_and_glove(sensors):
     """
     The main background loop.
     1. Starts the WebSocket server to listen to the Quest.
-    2. Continously calculates the tactile sensor average from the ESP32 stream.
+    2. Continously saves the tactile sensor grid from the ESP32 stream.
+    3. Listens for new packets of handpose data and stamps along with current tactile values into a row
     """
-    global latest_sensor_value
+    global latest_sensor_values, latest_index_avg
     print("[🚀] Sync Server Live on 10.18.58.199:8765")
-    
-    # Define the slice for the index finger tip based on your regions
-    index_finger_region = (slice(9,11), slice(0,3))
 
     # Start the WebSocket server task
     server = await websockets.serve(quest_handler, "10.18.58.199", 8765)
 
-    # Process the sensor grid at 100Hz
+    # Process the sensor grid at 100Hz (faster than Quest)
     while True:
         if sensors[0].init:
-            try:
-                # Reshape raw 1D array into the 2D pressure grid
-                grid = sensors[0].pressure.reshape(sensors[0].selWires, sensors[0].readWires)
-                # Calculate mean of the specific finger region
-                latest_sensor_value = int(np.mean(grid[index_finger_region[1], index_finger_region[0]]))
+            try: 
+                # Capture the snapshot of the full pressure array
+                # .tolist() ensures standard Python list for CSV writing
+                latest_sensor_values = sensors[0].pressure.tolist()
+                latest_index_avg = get_index_average(sensors)
             except Exception as e:
                 pass # Handle potential momentary reshaping errors
 
