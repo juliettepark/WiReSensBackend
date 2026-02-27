@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from plot_pinch import calculate_distance
-from tactile_handpose_utils import get_index_averages_right, get_sensor_data, get_thumb_averages_right
+from tactile_handpose_utils import collapse_recording_data
 
 RESULT_CSV = _project_root / "data" / "pinch_labeled_results.csv"
 
@@ -54,6 +54,28 @@ def parse_args():
 
     return args
 
+# def collapse_recording_data(df: pd.DataFrame):
+#     """
+#     Collapse the recording data into a single row of data with averages, mins, and maxes of the index and thumb 
+#     pressures and the average, min, and max of the distance between the index and thumb tips.
+#     Returns a list of the data.
+#     """
+#     sensor_data = get_sensor_data(df)
+#     index_pressures = get_index_averages_right(sensor_data)
+#     thumb_pressures = get_thumb_averages_right(sensor_data)
+#     index_avg = np.mean(index_pressures)
+#     index_min = np.min(index_pressures)
+#     index_max = np.max(index_pressures)
+#     thumb_avg = np.mean(thumb_pressures)
+#     thumb_min = np.min(thumb_pressures)
+#     thumb_max = np.max(thumb_pressures)
+#     finger_tip_distances = calculate_distance(df, "R_XRHand_IndexTip", "R_XRHand_ThumbTip")
+#     finger_tip_avg = np.mean(finger_tip_distances)
+#     finger_tip_min = np.min(finger_tip_distances)
+#     finger_tip_max = np.max(finger_tip_distances)
+
+#     return [index_avg, index_min, index_max, thumb_avg, thumb_min, thumb_max, finger_tip_avg, finger_tip_min, finger_tip_max]
+
 
 def process_pinch_folder(data_dir: Path, label: str):
     """For each segment recording, read the CSV file, collapse the data into a single row, and write the row to the result CSV."""
@@ -67,27 +89,10 @@ def process_pinch_folder(data_dir: Path, label: str):
             recording_csv_path = os.path.join(data_dir, csv_file)
             with open(recording_csv_path, 'r') as f:
                 df = pd.read_csv(recording_csv_path)
-                sensor_data = get_sensor_data(df)
-                index_pressures = get_index_averages_right(sensor_data)
-                thumb_pressures = get_thumb_averages_right(sensor_data)
-
-                # Get the average, min, and max of the index and thumb pressures
-                index_avg = np.mean(index_pressures)
-                index_min = np.min(index_pressures)
-                index_max = np.max(index_pressures)
-                thumb_avg = np.mean(thumb_pressures)
-                thumb_min = np.min(thumb_pressures)
-                thumb_max = np.max(thumb_pressures)
-
-                # Get the distance between the index and thumb tips
-                finger_tip_distances = calculate_distance(df, "R_XRHand_IndexTip", "R_XRHand_ThumbTip")
-                # Get the average, min, and max of the finger tip distances
-                finger_tip_avg = np.mean(finger_tip_distances)
-                finger_tip_min = np.min(finger_tip_distances)
-                finger_tip_max = np.max(finger_tip_distances)
+                data_row = collapse_recording_data(df)
 
                 # Write the row to the result CSV with the label
-                writer.writerow([index_avg, index_min, index_max, thumb_avg, thumb_min, thumb_max, finger_tip_avg, finger_tip_min, finger_tip_max, label])
+                writer.writerow(data_row + [label])
 
 
 def main():
