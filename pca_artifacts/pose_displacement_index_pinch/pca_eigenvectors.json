@@ -1,0 +1,146 @@
+{
+    "Heavy Wrap Internal": {
+        "pose": {
+            "eigenvector": [
+                0.432891076251672,
+                -0.012988979923695188,
+                0.07667313576585533,
+                0.0387089233914468,
+                -0.11489203335797707,
+                -0.889864749652882
+            ],
+            "explained_variance": 0.7180392980196169,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 32.87379857531088,
+                "R_XRHand_IndexTip": 67.12620142468911
+            }
+        },
+        "tactile": null
+    },
+    "Heavy Wrap External": {
+        "pose": {
+            "eigenvector": [
+                0.13350739038168968,
+                -0.021921885227672466,
+                -0.14141278327957135,
+                -0.08078398414118441,
+                0.5595585806285366,
+                -0.8012900692869689
+            ],
+            "explained_variance": 0.556000598675783,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 16.636739903066683,
+                "R_XRHand_IndexTip": 83.36326009693332
+            }
+        },
+        "tactile": null
+    },
+    "Non-prehensile": {
+        "pose": {
+            "eigenvector": [
+                0.12009921267920205,
+                -0.8690498460110777,
+                0.05974349801732448,
+                0.18099154783837967,
+                -0.44043983189214236,
+                0.003751373148708173
+            ],
+            "explained_variance": 0.6625592574889204,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 64.87047760066133,
+                "R_XRHand_IndexTip": 35.12952239933868
+            }
+        },
+        "tactile": null
+    },
+    "Adducted Thumb Internal": {
+        "pose": {
+            "eigenvector": [
+                0.3667369018659443,
+                -0.34296522644736627,
+                -0.02822394312938429,
+                -0.06763349439831569,
+                -0.2834707746073317,
+                -0.8137274345079543
+            ],
+            "explained_variance": 0.5671896940165105,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 36.782577823266855,
+                "R_XRHand_IndexTip": 63.21742217673315
+            }
+        },
+        "tactile": null
+    },
+    "Power circular grasp": {
+        "pose": {
+            "eigenvector": [
+                0.3304992432272752,
+                0.2330656315100713,
+                -0.13305501723657828,
+                -0.06512498390648332,
+                0.3612659588826467,
+                -0.8270384921193001
+            ],
+            "explained_variance": 0.6028677595203524,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 31.99632447102375,
+                "R_XRHand_IndexTip": 68.00367552897625
+            }
+        },
+        "tactile": null
+    },
+    "Lateral Pinch": {
+        "pose": {
+            "eigenvector": [
+                -0.0056390819634678365,
+                0.09468827821077483,
+                0.024870887683174914,
+                -0.1064117855284928,
+                0.5652089042672345,
+                -0.8121571252581663
+            ],
+            "explained_variance": 0.6009997150617061,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 8.96986408410749,
+                "R_XRHand_IndexTip": 91.0301359158925
+            }
+        },
+        "tactile": null
+    },
+    "Precision circular grasp": {
+        "pose": {
+            "eigenvector": [
+                0.5527956410172407,
+                0.0837311105868056,
+                0.0278560238168815,
+                0.004350746558072084,
+                -0.1483566571854154,
+                -0.8152309461756885
+            ],
+            "explained_variance": 0.5986089255419448,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 40.31864193074986,
+                "R_XRHand_IndexTip": 59.68135806925012
+            }
+        },
+        "tactile": null
+    },
+    "Precision pinch": {
+        "pose": {
+            "eigenvector": [
+                0.4665073719387932,
+                0.010079029470016265,
+                0.014988530184620735,
+                0.11422039433313753,
+                -0.38248121922638245,
+                -0.7891175118523793
+            ],
+            "explained_variance": 0.5700322557321786,
+            "joint_contributions_pct": {
+                "R_XRHand_ThumbTip": 34.55154218001428,
+                "R_XRHand_IndexTip": 65.44845781998572
+            }
+        },
+        "tactile": null
+    }
+}
