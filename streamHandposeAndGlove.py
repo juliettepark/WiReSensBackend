@@ -18,67 +18,28 @@ import joblib
 from tactile_utils.PressureConverter import PressureConverter
 from tactile_utils.DisplacementConverter import DisplacementConverter
 
-from tactile_utils.tactile_handpose_utils import collapse_recording_data, right_hand_regions, bone_names, save_to_csv, recording_buffer_to_df, save_to_result_data_csv
+from tactile_utils.tactile_handpose_utils import collapse_recording_data, save_to_csv, recording_buffer_to_df, save_to_result_data_csv
 
 # =============================== CONSTANTS ===============================
 
 # Number of sensors in the tactile glove pressure grid
 NUM_SENSORS = 16*16
 
+# Type of grasp to record and predict
+# GRASP_TYPE = "Power sphere"
+# GRASP_TYPE = "Precision pinch"
+GRASP_TYPE = "Heavy Wrap Internal"
+
 # File to save the results of the recording session. Labeled with 1 row per segment recording.
-RESULT_CSV = _project_root / "data" / "pinch_labeled_results_collect_from_stream.csv"
+RESULT_CSV = _project_root / "data" / "power_sphere" / "labeled_collapsed_results" / "hwi_labeled_results_collect_from_stream.csv"
 
 # Path to folder to save the raw CSV recordings per segment
-RAW_DATA_RECORDINGS_FOLDER = _project_root / "data" / "raw_data"
+RAW_DATA_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "raw_data"
 
-CONVERTED_RECORDINGS_FOLDER = _project_root / "data" / "converted_data"
-
-# Path to CSV file for the converted, collapsed data
-RESULT_CSV = _project_root / "data" / "powergrasp_labeled_results_collect_from_stream.csv"
+CONVERTED_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "converted_data"
 
 # File to load the model from.
 MODEL_FILE = _project_root / "models" / "color_pinch_model.joblib"
-
-# right_hand_regions = {
-#     't2':(slice(13,16), slice(12,16)),
-#     't1':(slice(11,13), slice(12,16)),
-#     'pa1':(slice(0,6), slice(12,16)),
-#     'pa2':(slice(6,11), slice(12,16)),
-#     'pa3':(slice(6,11), slice(9,12)),
-#     'pa4':(slice(0,6), slice(9,12)),
-#     'i1':(slice(9,11),slice(6,9)),
-#     'i2':(slice(9,11),slice(3,6)),
-#     'i3':(slice(9,11),slice(0,3)),
-#     'm1':(slice(6,8),slice(6,9)),
-#     'm2':(slice(6,8),slice(3,6)),
-#     'm3':(slice(6,8),slice(0,3)),
-#     'r1':(slice(3,5),slice(6,9)),
-#     'r2':(slice(3,5),slice(3,6)),
-#     'r3':(slice(3,5),slice(0,3)),
-#     'p1':(slice(0,2),slice(6,9)),
-#     'p2':(slice(0,2),slice(3,6)),
-#     'p3':(slice(0,2),slice(0,3)),
-# }
-
-# bone_names = [
-#     # Roots
-#     "XRHand_Wrist", "XRHand_Palm",
-
-#     # Thumb
-#     "XRHand_ThumbMetacarpal", "XRHand_ThumbProximal", "XRHand_ThumbDistal", "XRHand_ThumbTip",
-
-#     # Index
-#     "XRHand_IndexMetacarpal", "XRHand_IndexProximal", "XRHand_IndexIntermediate", "XRHand_IndexDistal", "XRHand_IndexTip",
-
-#     # Middle
-#     "XRHand_MiddleMetacarpal", "XRHand_MiddleProximal", "XRHand_MiddleIntermediate", "XRHand_MiddleDistal", "XRHand_MiddleTip",
-
-#     # Ring
-#     "XRHand_RingMetacarpal", "XRHand_RingProximal", "XRHand_RingIntermediate", "XRHand_RingDistal", "XRHand_RingTip",
-
-#     # Little
-#     "XRHand_LittleMetacarpal", "XRHand_LittleProximal", "XRHand_LittleIntermediate", "XRHand_LittleDistal", "XRHand_LittleTip"
-# ]
 
 class BackendMode(Enum):
     PREDICT = "predict"
@@ -93,8 +54,6 @@ active_quest = None
 # Buffer for sensor values from the tactile glove.
 latest_sensor_values = []
 
-# Latest index finger average pressure value.
-# latest_index_avg = 0
 # Buffer to store the full recording data (timestamps, tactile, handpose)
 recording_buffer = []
 
@@ -113,7 +72,7 @@ model = None
 
 # Initialize the pressure and displacement converters
 pressure_converter = PressureConverter()
-displacement_converter = DisplacementConverter("Power sphere")
+displacement_converter = DisplacementConverter(GRASP_TYPE)
 
 async def quest_handler(websocket):
     """Handles incoming Hand Pose data from Unity."""
@@ -137,7 +96,7 @@ async def quest_handler(websocket):
                 if mode == BackendMode.RECORD:
 
                     # Save the raw data for entire recording into a separate CSV file
-                    filename = f"tactile_hand_capture_{datetime.now().strftime('%Y%m%d_%H%M')}{current_session_label}.csv"
+                    filename = f"tactile_hand_capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}{current_session_label}.csv"
                     save_to_csv(recording_buffer, filename, RAW_DATA_RECORDINGS_FOLDER)
                     print(f"✅ FULL CSV SAVED TO {RAW_DATA_RECORDINGS_FOLDER} as {filename}")
 

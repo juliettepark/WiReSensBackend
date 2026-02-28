@@ -25,10 +25,19 @@ NUM_SENSORS = 16*16
 # RAW_DATA_RECORDINGS = _project_root / "data" / "raw_data"
 # CONVERTED_RECORDINGS = _project_root / "data" / "converted_data"
 
-GRASP_TYPE = "power_sphere"
+# GRASP_TYPE = "Power sphere"
+# GRASP_TYPE = "Precision pinch"
+GRASP_TYPE = "Heavy Wrap Internal"
+
 IMPORTANT_REGIONS = []
-if GRASP_TYPE == "power_sphere":
+if GRASP_TYPE == "Power sphere":
+    # Palm + Index + Middle + Ring + Little tips
     IMPORTANT_REGIONS = ["pa1", "pa2", "p3", "r3", "m3", "i3"]
+elif GRASP_TYPE == "Precision pinch":
+    IMPORTANT_REGIONS = ["i3", "t2"] # index finger and thumb
+elif GRASP_TYPE == "Heavy Wrap Internal":
+    # Palm (entire) 
+    IMPORTANT_REGIONS = ["i3", "m3", "r3", "p3", "pa1", "pa2", "pa3", "pa4"]
 
 right_hand_regions = {
     't2':(slice(13,16), slice(12,16)),
@@ -324,9 +333,6 @@ s_253: 't2'
 s_254: 't2'
 s_255: 't2'
 
-
-** Process exited - Return Code: 0 **
-
 """
 sensor_index_to_region = {f"s_{i}": get_region_from_index(i) for i in range(NUM_SENSORS*NUM_SENSORS)}
 
@@ -447,6 +453,23 @@ def save_to_csv(recording_buffer, filename, location: Path):
         writer.writerow(headers)
         writer.writerows(recording_buffer)
 
+def convert_raw_data_to_pressure(df: pd.DataFrame, pressure_converter: PressureConverter):
+    """Convert the raw data into pressure values. MODIFIES THE DF"""
+    for sensor_col in df.columns:
+        if sensor_col.startswith('s_'):
+            df[sensor_col] = pressure_converter.get_pressure(df[sensor_col], sensor_index_to_region[sensor_col])
+    return df
+
+def append_displacement_to_df(df: pd.DataFrame, displacement_converter: DisplacementConverter):
+    """Append the displacement values to the DataFrame."""
+
+    bone_cols = displacement_converter.bone_headers
+    df['displacement_pc1'] = df[bone_cols].apply(
+        lambda row: displacement_converter.get(row.tolist()), 
+        axis=1
+    )
+    return df
+
 def save_to_result_data_csv(recording_buffer, pressure_converter: PressureConverter, displacement_converter: DisplacementConverter, label: str, converted_recordings_folder: Path, result_csv: Path):
     """
     Save the segment recording data collapsed as a single row to the result CSV file WITH labels.
@@ -462,36 +485,32 @@ def save_to_result_data_csv(recording_buffer, pressure_converter: PressureConver
     if df is None:
         return
 
-    # Transform all sensor ADC values into pressure values and REPLACE in DataFrame
-    for sensor_col in df.columns:
-        if sensor_col.startswith('s_'):
-            df[sensor_col] = pressure_converter.get_pressure(df[sensor_col], sensor_index_to_region[sensor_col])
+    # Transform ALL of sensor ADC values into pressure values and REPLACE in DataFrame
+    df = convert_raw_data_to_pressure(df, pressure_converter)
 
-    # Use displacement converter to get vector for power grasp
-    converter = DisplacementConverter("Power sphere")
+    # Append the displacement values to the DataFrame
+    df = append_displacement_to_df(df, displacement_converter)
 
-    # 2. Identify the bone headers 
-    # (Your class already pre-computes these as self.bone_headers)
-    bone_cols = converter.bone_headers
+    
+    # # 2. Identify the bone headers 
+    # # (Your class already pre-computes these as self.bone_headers)
+    # bone_cols = displacement_converter.bone_headers
 
-    # 3. Calculate displacement for every frame (row) in the DataFrame
-    # axis=1 to process each row as a list
-    df['displacement_pc1'] = df[bone_cols].apply(
-        lambda row: converter.get(row.tolist()), 
-        axis=1
-    )
+    # # 3. Calculate displacement for every frame (row) in the DataFrame
+    # # axis=1 to process each row as a list
+    # df['displacement_pc1'] = df[bone_cols].apply(
+    #     lambda row: displacement_converter.get(row.tolist()), 
+    #     axis=1
+    # )
 
-    # SAVE THE FILE
-    # Define your filename
-    filename = f"processed_displacement_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-    # Combine the directory path with the filename
-    output_path = converted_recordings_folder / filename
-
-    # Save the DataFrame
-    df.to_csv(output_path, index=False)
-
-    print(f"📁 Processed file saved to: {output_path}")
+    # # UNCOMMENT TO SAVE THE CONVERTED FILE
+    # # Define your filename
+    # filename = f"processed_displacement_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    # # Combine the directory path with the filename
+    # output_path = converted_recordings_folder / filename
+    # # Save the DataFrame
+    # df.to_csv(output_path, index=False)
+    # print(f"📁 Processed file saved to: {output_path}")
 
 
     # Collapse current recording into feature row

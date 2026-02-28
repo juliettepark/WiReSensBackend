@@ -75,7 +75,7 @@ class DisplacementConverter:
             "Precision pinch": [
                 'R_XRHand_ThumbTip', 'R_XRHand_IndexTip'
             ],
-            "Heavy wrap internal": [
+            "Heavy Wrap Internal": [
                 'R_XRHand_ThumbTip', 'R_XRHand_IndexTip', 'R_XRHand_MiddleTip',
                 'R_XRHand_RingTip', 'R_XRHand_LittleTip'
             ],
