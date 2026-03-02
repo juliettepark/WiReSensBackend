@@ -18,7 +18,7 @@ import joblib
 from tactile_utils.PressureConverter import PressureConverter
 from tactile_utils.DisplacementConverter import DisplacementConverter
 
-from tactile_utils.tactile_handpose_utils import collapse_recording_data, save_to_csv, recording_buffer_to_df, save_to_result_data_csv
+from tactile_utils.tactile_handpose_utils import append_displacement_to_df, collapse_recording_data, convert_raw_data_to_pressure, save_to_csv, recording_buffer_to_df, save_to_result_data_csv
 
 # =============================== CONSTANTS ===============================
 
@@ -39,7 +39,7 @@ RAW_DATA_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "raw_data
 CONVERTED_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "converted_data"
 
 # File to load the model from.
-MODEL_FILE = _project_root / "models" / "color_pinch_model.joblib"
+MODEL_FILE = _project_root / "hwi_dough_model.joblib"
 
 class BackendMode(Enum):
     PREDICT = "predict"
@@ -106,14 +106,25 @@ async def quest_handler(websocket):
                     # print(f"✅ RECORDING SAVED TO {RESULT_CSV}")
                 elif mode == BackendMode.PREDICT:
 
+                    # Prepare the buffer for collapse and prediction
+                    df = recording_buffer_to_df(recording_buffer)
+                    if df is None:
+                        raise ValueError("No recording data in buffer to query.")
+                    df = convert_raw_data_to_pressure(df, pressure_converter)
+                    # Append the displacement values to the DataFrame
+                    df = append_displacement_to_df(df, displacement_converter)
+
                     # Query the model for a prediction
-                    prediction = query_model()
+                    prediction = query_model(df)
 
                     # Send through WebSocket to Unity
+                    # I will have a label prediction "xsoft", "soft", "medium", "firm"
+                    # Unity script will have to parse
                     await websocket.send(json.dumps({
                         "type": "PREDICTION",
                         "prediction": prediction
                     }))
+
                     print(f"✅ PREDICTION {prediction} SENT TO UNITY")
 
                 elif mode == BackendMode.SAVE_TO_CSV:
@@ -231,15 +242,16 @@ async def quest_handler(websocket):
 #     save_to_csv(f"tactile_hand_capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
 
 # TODO: Ensure that the features passed in data row are exactly the same as the features used to train the model.
-def query_model() -> str:
+def query_model(df) -> str:
     """Query the model for its prediction given the current data in the buffer."""
-    df = recording_buffer_to_df()
     if df is None:
-        raise ValueError("No recording data in buffer to query.")
+        raise ValueError("Buffer to query model is None.")
     data_row = collapse_recording_data(df)
-    y_predicted = model.predict(data_row)
+    # model.predict expects 2D array: (n_samples, n_features)
+    y_predicted = model.predict([data_row])
 
-    return y_predicted
+    # Return the single predicted label
+    return y_predicted[0]
 
 # def get_index_average(sensors):
 #     index_finger_region = (slice(9,11), slice(0,3))
@@ -259,8 +271,8 @@ async def sync_quest_and_glove(sensors):
     global latest_sensor_values, model
 
     # Load the model
-    # model = joblib.load(MODEL_FILE)
-    # print(f"[🤖] Model loaded from {MODEL_FILE}")
+    model = joblib.load(MODEL_FILE)
+    print(f"[🤖] Model loaded from {MODEL_FILE}")
 
     print("[🚀] Sync Server Live on 10.18.58.199:8765")
 

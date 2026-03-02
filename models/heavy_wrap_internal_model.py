@@ -1,5 +1,5 @@
 """
-Model to predict the color of a stress ball using tactile and handpose data on a pinch action.
+Model to predict the density of a putty using tactile and handpose data on a heavy wrap internal action.
 """
 
 import pandas as pd
@@ -8,12 +8,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import joblib
 
-df = pd.read_csv('data/pinch/pinch_labeled_results.csv')
+df = pd.read_csv('data/hwi/labeled_collapsed_results/heavy_wrap_internal_labeled_collapsed_results.csv')
 tactile_handpose_data = df.drop(columns=['label'])
 labels = df['label']
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(tactile_handpose_data, labels, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(tactile_handpose_data, labels, test_size=0.3, random_state=42)
 
 # Train the model
 model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -25,5 +25,5 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f"Accuracy: {accuracy}")
 
 # Save the model
-filename = 'color_pinch_model.joblib'
+filename = 'hwi_dough_model.joblib'
 joblib.dump(model, filename)

@@ -28,7 +28,7 @@ import numpy as np
 from plot_pinch import calculate_distance
 from tactile_handpose_utils import collapse_recording_data
 
-RESULT_CSV = _project_root / "data" / "pinch_labeled_results.csv"
+RESULT_CSV = _project_root / "data" / "pinch" / "pinch_labeled_results.csv"
 
 
 def parse_args():

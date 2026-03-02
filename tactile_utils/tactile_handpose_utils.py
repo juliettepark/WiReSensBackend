@@ -491,7 +491,7 @@ def save_to_result_data_csv(recording_buffer, pressure_converter: PressureConver
     # Append the displacement values to the DataFrame
     df = append_displacement_to_df(df, displacement_converter)
 
-    
+
     # # 2. Identify the bone headers 
     # # (Your class already pre-computes these as self.bone_headers)
     # bone_cols = displacement_converter.bone_headers
@@ -534,9 +534,10 @@ def save_to_result_data_csv(recording_buffer, pressure_converter: PressureConver
 
 def collapse_recording_data(df: pd.DataFrame):
     """
-    Collapse the recording data into a single row of data with averages, mins, and maxes of the index and thumb 
-    pressures and the average, min, and max of the distance between the index and thumb tips.
-    Returns a list of the data.
+    Collapse the recording data into a single row of data with averages, mins, and maxes pressures in each region
+    and the average, min, and max of the distance between for the displacement vector.
+    Expects DataFrame with pressure conversions and displacement conversions
+    Returns a list of the data. NO LABEL
     """
     sensor_data = get_sensor_data(df)
 
