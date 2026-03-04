@@ -38,6 +38,7 @@ elif GRASP_TYPE == "Precision pinch":
 elif GRASP_TYPE == "Heavy Wrap Internal":
     # Palm (entire) 
     IMPORTANT_REGIONS = ["i3", "m3", "r3", "p3", "pa1", "pa2", "pa3", "pa4"]
+    # IMPORTANT_REGIONS = ["i1", "i2", "m1", "m2", "r1", "r2", "p3", "pa3", "pa4", "pa1", "pa2"]
 
 right_hand_regions = {
     't2':(slice(13,16), slice(12,16)),
@@ -431,6 +432,29 @@ def get_feature_headers():
     headers.append("label")
     return headers
 
+# def get_feature_headers():
+#     """
+#     Generates headers for the feature row of data.
+#     (1 recording collapsed into a single row of data for model training input)
+#     """
+#     # headers = ["index_avg", "index_min", "index_max", "thumb_avg", "thumb_min", "thumb_max", "finger_tip_avg", "finger_tip_min", "finger_tip_max", "label"]
+#     headers = []
+#     for region in IMPORTANT_REGIONS:
+#         headers.append(f"{region}_avg")
+#         headers.append(f"{region}_min")
+#         headers.append(f"{region}_max")
+#         headers.append(f"{region}_std")
+#         headers.append(f"{region}_time_to_peak")
+#         headers.append(f"{region}_slope")
+
+#     headers.append("displacement_avg")
+#     headers.append("displacement_min")
+#     headers.append("displacement_max")
+#     headers.append("displacement_std")
+
+#     headers.append("label")
+#     return headers
+
 # =============================== DATA PROCESSING/RECORDING ===============================
 
 def recording_buffer_to_df(recording_buffer):
@@ -562,6 +586,56 @@ def collapse_recording_data(df: pd.DataFrame):
     collapsed_row.append(np.max(displacement))
     
     return collapsed_row
+
+# def collapse_recording_data(df: pd.DataFrame):
+#     """
+#     Collapse the recording data into a single row of data with averages, mins, and maxes pressures in each region
+#     and the average, min, and max of the distance between for the displacement vector.
+#     Expects DataFrame with pressure conversions and displacement conversions
+#     Returns a list of the data. NO LABEL
+#     """
+#     sensor_data = get_sensor_data(df)  # shape: (n_frames, 256)
+#     n_frames = sensor_data.shape[0]  # number of frames
+
+#     collapsed_row = []
+
+#     # Use normalized time so slope features aren't directly dependent on recording length.
+#     if n_frames <= 1:
+#         t_norm = np.array([0.0])
+#     else:
+#         t_norm = np.linspace(0.0, 1.0, n_frames)
+
+#     # --- Region features: mean/min/max/std + time_to_peak + slope ---
+#     for region in IMPORTANT_REGIONS:
+#         series = np.asarray(get_region_averages_right(sensor_data, region), dtype=float)
+
+#         mean_v = float(np.mean(series)) if series.size else 0.0
+#         min_v = float(np.min(series)) if series.size else 0.0
+#         max_v = float(np.max(series)) if series.size else 0.0
+#         std_v = float(np.std(series)) if series.size else 0.0
+
+#         if series.size:
+#             peak_idx = int(np.argmax(series))
+#             time_to_peak = float(peak_idx / (series.size - 1)) if series.size > 1 else 0.0
+#         else:
+#             time_to_peak = 0.0
+
+#         if series.size >= 2 and np.any(t_norm != t_norm[0]):
+#             slope = float(np.polyfit(t_norm, series, 1)[0])
+#         else:
+#             slope = 0.0
+
+#         collapsed_row.extend([mean_v, min_v, max_v, std_v, time_to_peak, slope])
+
+#     # --- Displacement features ---
+#     displacement = np.asarray(df["displacement_pc1"].values, dtype=float) if "displacement_pc1" in df.columns else np.asarray([], dtype=float)
+#     d_mean = float(np.mean(displacement)) if displacement.size else 0.0
+#     d_min = float(np.min(displacement)) if displacement.size else 0.0
+#     d_max = float(np.max(displacement)) if displacement.size else 0.0
+#     d_std = float(np.std(displacement)) if displacement.size else 0.0
+#     collapsed_row.extend([d_mean, d_min, d_max, d_std])
+
+#     return collapsed_row
 
 # def collapse_recording_data(df: pd.DataFrame):
 #     """

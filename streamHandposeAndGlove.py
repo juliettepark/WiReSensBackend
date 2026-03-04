@@ -18,7 +18,18 @@ import joblib
 from tactile_utils.PressureConverter import PressureConverter
 from tactile_utils.DisplacementConverter import DisplacementConverter
 
-from tactile_utils.tactile_handpose_utils import append_displacement_to_df, collapse_recording_data, convert_raw_data_to_pressure, save_to_csv, recording_buffer_to_df, save_to_result_data_csv
+from tactile_utils.tactile_handpose_utils import (
+    IMPORTANT_REGIONS,
+    append_displacement_to_df,
+    collapse_recording_data,
+    convert_raw_data_to_pressure,
+    get_feature_headers,
+    get_region_averages_right,
+    get_sensor_data,
+    save_to_csv,
+    recording_buffer_to_df,
+    save_to_result_data_csv,
+)
 
 # =============================== CONSTANTS ===============================
 
@@ -39,7 +50,8 @@ RAW_DATA_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "raw_data
 CONVERTED_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "converted_data"
 
 # File to load the model from.
-MODEL_FILE = _project_root / "hwi_dough_model.joblib"
+# MODEL_FILE = _project_root / "hwi_dough_model.joblib"
+MODEL_FILE = _project_root / "hwi_dough_model_more_data_more_features_bestsofar.joblib"
 
 class BackendMode(Enum):
     PREDICT = "predict"

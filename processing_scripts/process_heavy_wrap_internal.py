@@ -11,7 +11,8 @@ Appends the row to the result CSV file with the given label.
 Usage:
     python3 process_heavy_wrap_internal.py <data_dir> <label>
 
-    Ex. python3 processing_scripts/process_heavy_wrap_internal.py data/hwi/raw_data/firm_hwi firm
+    Ex. python3 processing_scripts/process_heavy_wrap_internal.py data/hwi/raw_data/firm firm
+    Ex. python3 processing_scripts/process_heavy_wrap_internal.py data/hwi/devin_data/firm firm
 """
 
 import sys
@@ -32,7 +33,7 @@ import os
 import pandas as pd
 import numpy as np
 
-RESULT_CSV = _project_root / "data" / "hwi" / "labeled_collapsed_results" / "heavy_wrap_internal_labeled_collapsed_results.csv"
+RESULT_CSV = _project_root / "data" / "hwi" / "labeled_collapsed_results" / "heavy_wrap_internal_labeled_collapsed_results_v4.csv"
 GRASP_TYPE = "Heavy Wrap Internal"
 
 def parse_args():
