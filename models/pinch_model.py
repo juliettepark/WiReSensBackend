@@ -1,5 +1,7 @@
 """
-Model to predict the color of a stress ball using tactile and handpose data on a pinch action.
+Model to predict the classification of a pinch using tactile and handpose data.
+
+Ex. python3 models/pinch_model.py
 """
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -14,7 +16,8 @@ FEATURE_COLUMNS = [
     "finger_tip_avg", "finger_tip_min", "finger_tip_max",
 ]
 
-df = pd.read_csv('data/pinch_dough/pinch_dough_labeled_results.csv')
+# UPDATE WHEN RUNNING
+df = pd.read_csv('data/pinch_dough/pinch_dough_labeled_results_newmediumdata.csv')
 X = df[FEATURE_COLUMNS]
 y = df['label']
 
@@ -30,6 +33,6 @@ y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Accuracy: {accuracy}")
 
-# Save the model
-filename = 'pinch_dough_model.joblib'
+# UPDATE WHEN RUNNING
+filename = 'pinch_dough_model_newmediumdata.joblib'
 joblib.dump(model, filename)

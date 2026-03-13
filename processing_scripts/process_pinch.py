@@ -9,6 +9,7 @@ Append the row to the result CSV file with the given label.
 
 Usage:
     python3 processing_scripts/process_pinch.py <data_dir> <label>
+    Ex. python3 processing_scripts/process_pinch.py data/pinch_dough/raw_data/medium medium
 """
 
 import sys
@@ -26,9 +27,9 @@ import pandas as pd
 import numpy as np
 
 from plot_pinch import calculate_distance
-# from tactile_handpose_utils import collapse_recording_data
 
-RESULT_CSV = _project_root / "data" / "pinch_dough" / "pinch_dough_labeled_results.csv"
+# UPDATE WHEN RUNNING
+RESULT_CSV = _project_root / "data" / "pinch_dough" / "pinch_dough_labeled_results_1.csv"
 
 right_hand_regions = {
     't2':(slice(13,16), slice(12,16)),

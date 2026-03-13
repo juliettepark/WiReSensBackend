@@ -54,7 +54,10 @@ CONVERTED_RECORDINGS_FOLDER = _project_root / "data" / "power_sphere" / "convert
 # File to load the model from.
 # MODEL_FILE = _project_root / "hwi_dough_model.joblib"
 # MODEL_FILE = _project_root / "hwi_dough_model_more_data_more_features_bestsofar.joblib"
-MODEL_FILE = _project_root / "pinch_dough_model.joblib"
+# MODEL_FILE = _project_root / "pinch_dough_model.joblib"
+
+# UPDATE WHEN RUNNING
+MODEL_FILE = _project_root / "pinch_dough_model_newmediumdata.joblib"
 
 # Feature columns used by pinch_dough_model (must match training CSV and pinch_model.py column order)
 PINCH_FEATURE_COLUMNS = [
@@ -173,6 +176,7 @@ async def quest_handler(websocket):
                     row.extend([0] * NUM_SENSORS) 
 
                 # 2. Add all bone values: must be in same order as get_bone_headers() (L then R, each bone Px,Py,Pz,Qx,Qy,Qz,Qw)
+                # Add all 334 bone values (2 hands x 26 bones x 7 data points)
                 row.extend(payload.get("data"))
                 
                 recording_buffer.append(row)
@@ -292,7 +296,7 @@ async def sync_quest_and_glove(sensors):
 
     # Start the WebSocket server task
     # server = await websockets.serve(quest_handler, "10.18.58.199", 8765)
-    server = await websockets.serve(quest_handler, "10.18.95.137", 8765)
+    server = await websockets.serve(quest_handler, "10.18.81.13", 8765)
 
     # Process the sensor grid at 100Hz (faster than Quest)
     while True:
