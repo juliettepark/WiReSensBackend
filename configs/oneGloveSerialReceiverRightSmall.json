@@ -28,7 +28,7 @@
     {
       "id": 2,
       "protocol": "serial",
-      "serialPort": "/dev/cu.SLAB_USBtoUART",
+      "serialPort": "/dev/cu.usbserial-0287C073",
       "deviceName": "Esp2",
       "startCoord": [
         0,

@@ -296,7 +296,9 @@ async def sync_quest_and_glove(sensors):
 
     # Start the WebSocket server task
     # server = await websockets.serve(quest_handler, "10.18.58.199", 8765)
-    server = await websockets.serve(quest_handler, "10.18.81.13", 8765)
+    # server = await websockets.serve(quest_handler, "10.18.81.13", 8765)
+    # server = await websockets.serve(quest_handler, "10.18.225.14", 8765)
+    server = await websockets.serve(quest_handler, "10.0.0.78", 8765)
 
     # Process the sensor grid at 100Hz (faster than Quest)
     while True:
